@@ -11,49 +11,46 @@ def test_count_file():
     # Test with a simple string
     data = "Hello world\nThis is a test\n"
     file = StringIO(data)
-    lines, words, chars = count_file(file)
+    lines, words, bytes_, chars = count_file(file)
     assert lines == 2
     assert words == 6
+    assert bytes_ == len(data.encode('utf-8'))
     assert chars == len(data)
 
 
 def test_count_file_empty():
     file = StringIO("")
-    lines, words, chars = count_file(file)
+    lines, words, bytes_, chars = count_file(file)
     assert lines == 0
     assert words == 0
+    assert bytes_ == 0
     assert chars == 0
 
 
 def test_count_file_single_char():
     file = StringIO("a")
-    lines, words, chars = count_file(file)
+    lines, words, bytes_, chars = count_file(file)
     assert lines == 1
     assert words == 1
+    assert bytes_ == len("a".encode('utf-8'))
     assert chars == 1
 
 
 def test_count_file_newline_only():
     file = StringIO("\n")
-    lines, words, chars = count_file(file)
+    lines, words, bytes_, chars = count_file(file)
     assert lines == 1
     assert words == 0
+    assert bytes_ == len("\n".encode('utf-8'))
     assert chars == 1
 
 
 def test_cli_no_args_stdin():
     # Test stdin input via the input parameter
     result = runner.invoke(app, [], input="Hello world\nThis is a test\n")
-    # Default behavior: lines, words, chars
+    # Default behavior: lines, words, bytes (like wc)
     assert result.exit_code == 0
-    # Output should be: "2 6 27" (note: newline characters count)
-    # Let's compute: "Hello world\n" -> 12 chars, "This is a test\n" -> 15 chars, total 27? Wait, let's count:
-    # Actually, we have two lines:
-    # Line1: "Hello world\n" -> 12 (H e l l o   w o r l d \n)
-    # Line2: "This is a test\n" -> 15 (T h i s   i s   a   t e s t \n)
-    # Total: 27 characters.
-    # But our count_file counts the newline as part of the line, so yes.
-    # Expected output: "2 6 27"
+    # Output should be: "2 6 27" (bytes)
     output = result.stdout.strip()
     assert output == "2 6 27"
 
@@ -70,10 +67,16 @@ def test_cli_words_option():
     assert result.stdout.strip() == "6"
 
 
-def test_cli_chars_option():
+def test_cli_bytes_option():
     result = runner.invoke(app, ["-c"], input="Hello world\nThis is a test\n")
     assert result.exit_code == 0
     assert result.stdout.strip() == "27"
+
+
+def test_cli_chars_option():
+    result = runner.invoke(app, ["-m"], input="Hello world\nThis is a test\n")
+    assert result.exit_code == 0
+    assert result.stdout.strip() == "27"  # ASCII: bytes == chars
 
 
 def test_cli_multiple_files(tmp_path, monkeypatch):
@@ -89,9 +92,9 @@ def test_cli_multiple_files(tmp_path, monkeypatch):
     result = runner.invoke(app, ["file1.txt", "file2.txt"])
     assert result.exit_code == 0
     # Expected output:
-    # file1: 1 line, 2 words, 12 chars
-    # file2: 2 lines, 5 words, 23 chars (including newlines: "This is a test\n"=15, "Goodbye\n"=8)
-    # total: 3 lines, 7 words, 35 chars
+    # file1: 1 line, 2 words, 12 bytes
+    # file2: 2 lines, 5 words, 23 bytes (including newlines: "This is a test\n"=15, "Goodbye\n"=8)
+    # total: 3 lines, 7 words, 35 bytes
     # Format:
     #   1 2 12 file1.txt
     #   2 5 23 file2.txt
@@ -111,13 +114,20 @@ def test_cli_multiple_files_with_options(tmp_path, monkeypatch):
     # Change to the temporary directory so that file paths are relative
     monkeypatch.chdir(tmp_path)
 
-    result = runner.invoke(app, ["-l", "-w", "file1.txt", "file2.txt"])
+    result = runner.invoke(app, ["-l", "-w", "-m", "file1.txt", "file2.txt"])
     assert result.exit_code == 0
     lines = result.stdout.strip().split("\n")
     assert len(lines) == 3
-    # file1: 1 line, 2 words
-    # file2: 1 line, 4 words
-    # total: 2 lines, 6 words
-    assert lines[0] == "1 2 file1.txt"
-    assert lines[1] == "1 4 file2.txt"
-    assert lines[2] == "2 6 total"
+    # file1: 1 line, 2 words, 12 chars
+    # file2: 1 line, 4 words, 15 chars
+    # total: 2 lines, 6 words, 27 chars
+    assert lines[0] == "1 2 12 file1.txt"
+    assert lines[1] == "1 4 15 file2.txt"
+    assert lines[2] == "2 6 27 total"
+
+
+def test_cli_version():
+    result = runner.invoke(app, ["--version"])
+    assert result.exit_code == 0
+    # Output should start with "wordcount version"
+    assert result.stdout.strip().startswith("wordcount version")
