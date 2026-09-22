@@ -17,5 +17,6 @@
 - Se considerará la codificación UTF-8 para el cálculo de bytes.
 
 ## Histórico
+- 2026-09-22: Objetivo alcanzado: 90% de cobertura con wc implementado.
 - 2026-09-22: Implementación de mejoras para alcanzar 90% de cobertura con wc: conteo de bytes mediante -c, conteo de caracteres mediante -m, comportamiento por defecto (líneas, palabras, bytes) y flag --version.
 - 2026-09-22: Implementación inicial de wordcount con Typer, pruebas unitarias y análisis de cobertura vs wc.
