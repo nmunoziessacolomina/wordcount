@@ -13,12 +13,6 @@ A CLI tool inspired by Unix `wc` for counting lines, words, bytes, and character
 - Supports multiple files and prints a total line.
 - Version information with `--version`.
 
-## Installation
-
-```bash
-pip install .
-```
-
 ## Usage
 
 ```bash
@@ -43,6 +37,59 @@ wordcount file1.txt file2.txt
 # Show version
 wordcount --version
 ```
+
+## Examples
+
+Using the file `loremipsum.txt` (provided in the repository) which contains:
+
+```
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+```
+
+- **Count lines**:  
+  ```bash
+  wordcount -l loremipsum.txt
+  # Output: 4 loremipsum.txt
+  ```
+
+- **Count words**:  
+  ```bash
+  wordcount -w loremipsum.txt
+  # Output: 69 loremipsum.txt
+  ```
+
+- **Count bytes**:  
+  ```bash
+  wordcount -c loremipsum.txt
+  # Output: 446 loremipsum.txt
+  ```
+
+- **Count characters**:  
+  ```bash
+  wordcount -m loremipsum.txt
+  # Output: 446 loremipsum.txt
+  ```
+
+- **Default behavior (lines, words, bytes)**:  
+  ```bash
+  wordcount loremipsum.txt
+  # Output: 4 69 446 loremipsum.txt
+  ```
+
+- **Combine options (lines and characters)**:  
+  ```bash
+  wordcount -l -m loremipsum.txt
+  # Output: 4 446 loremipsum.txt
+  ```
+
+- **From stdin**:  
+  ```bash
+  cat loremipsum.txt | wordcount
+  # Output: 4 69 446
+  ```
 
 ## Implementation Details
 
